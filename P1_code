@@ -5,24 +5,29 @@ from sklearn.metrics import accuracy_score, precision_score
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("/mnt/data/alzheimers_disease_data.csv")
-df = df.drop(columns=["PatientID", "DoctorInCharge"])  # Irrelevant columns
+df = pd.read_csv("alzheimers_disease_data (1).csv")
+df = df.drop(columns=["PatientID", "DoctorInCharge","EducationLevel"])  # Irrelevant columns
 
-sns.heatmap(df.corr(), cmap="coolwarm", center=0)
-plt.title("Feature Correlation Heatmap")
+plt.figure(figsize=(12, 10))
+sns.heatmap(df.corr(), cmap="coolwarm", center=0, annot=False)
+plt.title("Correlation Heatmap of Numeric Features")
+plt.tight_layout()
 plt.show()
 
-
+# Features & target
 X = df.drop(columns=["Diagnosis"])
 y = df["Diagnosis"]
+
+#  Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-
-model = LogisticRegression(max_iter=1000)
+# Model training
+# model = LogisticRegression(max_iter=1000)
+model = LogisticRegression(max_iter=2000,solver='saga')
 model.fit(X_train, y_train)
 
-
+#Predictions & evaluation
 y_pred = model.predict(X_test)
 acc = accuracy_score(y_test, y_pred)
 prec = precision_score(y_test, y_pred)
-print(f"Accuracy: {acc:.2f}, Precision: {prec:.2f}")
+print(f"Accuracy: {acc:.2f} \nPrecision: {prec:.2f}")
