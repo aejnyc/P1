@@ -2,32 +2,42 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score
+from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+# Load data
 df = pd.read_csv("alzheimers_disease_data (1).csv")
-df = df.drop(columns=["PatientID", "DoctorInCharge","EducationLevel"])  # Irrelevant columns
 
-plt.figure(figsize=(12, 10))
-sns.heatmap(df.corr(), cmap="coolwarm", center=0, annot=False)
-plt.title("Correlation Heatmap of Numeric Features")
-plt.tight_layout()
+# Auto-scan and drop irrelevant columns
+def clean_dataframe(df, missing_thresh=0.2):
+    # Drop columns with >20% missing values
+    df = df.dropna(thresh=len(df)*(1 - missing_thresh), axis=1)
+    df = df.loc[:, df.nunique() > 1]
+    return df
+
+df = clean_dataframe(df)
+
+sns.heatmap(df.corr(), cmap="coolwarm", center=0)
+plt.title("Feature Correlation Heatmap")
 plt.show()
 
-# Features & target
 X = df.drop(columns=["Diagnosis"])
 y = df["Diagnosis"]
 
-#  Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Feature Scaling
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-# Model training
-# model = LogisticRegression(max_iter=1000)
-model = LogisticRegression(max_iter=2000,solver='saga')
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+
+model = LogisticRegression(max_iter=1000)
 model.fit(X_train, y_train)
-
-#Predictions & evaluation
 y_pred = model.predict(X_test)
+
+# Metrics
 acc = accuracy_score(y_test, y_pred)
 prec = precision_score(y_test, y_pred)
-print(f"Accuracy: {acc:.2f} \nPrecision: {prec:.2f}")
+print(f"Accuracy: {acc:.2f}, Precision: {prec:.2f}")
